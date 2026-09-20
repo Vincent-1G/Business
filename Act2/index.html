@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#24112f" />
+    <title>our little forever</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .visual-main img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .visual-main video,
+      .collage-media {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .collage-media {
+        z-index: 1;
+      }
+      .collage-audio {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        color: #ffe2f0;
+        font-family: "Playfair Display", serif;
+        font-size: 48px;
+        text-shadow: 0 0 22px rgba(255, 198, 232, 0.7);
+      }
+      .visual-main video {
+        z-index: 1;
+      }
+      .visual-main .visual-placeholder,
+      .visual-top .visual-placeholder,
+      .visual-small .visual-placeholder,
+      .visual-polaroid .visual-placeholder {
+        position: relative;
+        z-index: 2;
+      }
+      .visual-main img:not([hidden]) ~ .visual-placeholder {
+        display: none;
+      }
+      .collage {
+        margin: 84px 8% 54px 4%;
+        border: 1px solid rgba(246, 215, 239, 0.34);
+        box-shadow:
+          inset 0 0 0 10px rgba(246, 215, 239, 0.04),
+          0 0 0 1px rgba(23, 8, 28, 0.4),
+          0 24px 90px rgba(15, 4, 22, 0.3);
+      }
+      .collage::after {
+        position: absolute;
+        inset: 16px;
+        border: 1px solid rgba(246, 215, 239, 0.15);
+        pointer-events: none;
+        content: "";
+      }
+      .collage-card {
+        outline: 1px solid rgba(68, 28, 67, 0.18);
+        outline-offset: 4px;
+      }
+      .collage-frame {
+        position: absolute;
+        z-index: 2;
+        width: 104px;
+        height: 88px;
+        padding: 6px;
+        border: 5px solid #f5e3e8;
+        background: #f5e3e8;
+        box-shadow: 0 12px 24px rgba(15, 4, 22, 0.3);
+      }
+      .collage-frame .visual {
+        width: 100%;
+        height: 100%;
+      }
+      .collage-frame .visual-placeholder {
+        position: relative;
+        z-index: 2;
+        font-size: 14px;
+      }
+      .collage-frame:nth-of-type(5) {
+        top: 4%;
+        left: 33%;
+        transform: rotate(8deg);
+      }
+      .collage-frame:nth-of-type(6) {
+        top: 28%;
+        left: 2%;
+        transform: rotate(-10deg);
+      }
+      .collage-frame:nth-of-type(7) {
+        top: 59%;
+        left: 10%;
+        transform: rotate(6deg);
+      }
+      .collage-frame:nth-of-type(8) {
+        top: 78%;
+        left: 42%;
+        transform: rotate(-4deg);
+      }
+      .collage-frame:nth-of-type(9) {
+        top: 27%;
+        right: 4%;
+        transform: rotate(-8deg);
+      }
+      .collage-frame:nth-of-type(10) {
+        top: 64%;
+        right: 18%;
+        transform: rotate(9deg);
+      }
+      .collage-slot .collage-media {
+        z-index: 1;
+      }
+      @media (max-width: 900px) {
+        .collage-frame {
+          width: 82px;
+          height: 70px;
+          padding: 4px;
+          border-width: 4px;
+        }
+        .collage-frame .visual-placeholder {
+          font-size: 10px;
+        }
+      }
+      #hero-collage > .collage-card {
+        top: 10%;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        z-index: 2;
+        width: 17%;
+        height: auto;
+        aspect-ratio: 1;
+        padding: 6px;
+        border: 5px solid #f8edf0;
+        border-radius: 2px;
+        background: #f8edf0;
+        box-shadow: 0 10px 22px rgba(15, 4, 22, 0.28);
+        transform: none;
+      }
+      #hero-collage > .collage-card:hover {
+        z-index: 5;
+        transform: translateY(-4px);
+      }
+      #hero-collage > .collage-card:nth-of-type(1),
+      #hero-collage > .collage-card:nth-of-type(2),
+      #hero-collage > .collage-card:nth-of-type(3),
+      #hero-collage > .collage-card:nth-of-type(4),
+      #hero-collage > .collage-card:nth-of-type(5) {
+        top: 10%;
+      }
+      #hero-collage > .collage-card:nth-of-type(6),
+      #hero-collage > .collage-card:nth-of-type(7),
+      #hero-collage > .collage-card:nth-of-type(8),
+      #hero-collage > .collage-card:nth-of-type(9),
+      #hero-collage > .collage-card:nth-of-type(10) {
+        top: 55%;
+      }
+      #hero-collage > .collage-card:nth-of-type(1),
+      #hero-collage > .collage-card:nth-of-type(6) {
+        left: 3%;
+      }
+      #hero-collage > .collage-card:nth-of-type(2),
+      #hero-collage > .collage-card:nth-of-type(7) {
+        left: 22%;
+      }
+      #hero-collage > .collage-card:nth-of-type(3),
+      #hero-collage > .collage-card:nth-of-type(8) {
+        left: 41%;
+      }
+      #hero-collage > .collage-card:nth-of-type(4),
+      #hero-collage > .collage-card:nth-of-type(9) {
+        left: 60%;
+      }
+      #hero-collage > .collage-card:nth-of-type(5),
+      #hero-collage > .collage-card:nth-of-type(10) {
+        left: 79%;
+      }
+      #hero-collage > .collage-card .visual {
+        width: 100%;
+        height: 100%;
+      }
+      #hero-collage > .collage-card .visual-placeholder {
+        font-size: 15px;
+        line-height: 1.1;
+      }
+      #hero-collage .tape,
+      #hero-collage .photo-caption,
+      #hero-collage .date-stamp,
+      #hero-collage .polaroid-caption,
+      #hero-collage .scribble,
+      #hero-collage .flower {
+        display: none;
+      }
+      @media (max-width: 900px) {
+        #hero-collage > .collage-card {
+          width: 17%;
+          height: auto;
+          aspect-ratio: 1;
+          padding: 4px;
+          border-width: 3px;
+        }
+        #hero-collage > .collage-card:nth-of-type(6),
+        #hero-collage > .collage-card:nth-of-type(7),
+        #hero-collage > .collage-card:nth-of-type(8),
+        #hero-collage > .collage-card:nth-of-type(9),
+        #hero-collage > .collage-card:nth-of-type(10) {
+          top: 58%;
+        }
+        #hero-collage > .collage-card .visual-placeholder {
+          font-size: 10px;
+        }
+      }
+      #hero-collage > .collage-card {
+        width: 22%;
+        padding: 5px;
+        border-width: 4px;
+      }
+      #hero-collage > .collage-card:nth-of-type(1),
+      #hero-collage > .collage-card:nth-of-type(2),
+      #hero-collage > .collage-card:nth-of-type(3),
+      #hero-collage > .collage-card:nth-of-type(4) {
+        top: 6%;
+      }
+      #hero-collage > .collage-card:nth-of-type(5),
+      #hero-collage > .collage-card:nth-of-type(6),
+      #hero-collage > .collage-card:nth-of-type(7),
+      #hero-collage > .collage-card:nth-of-type(8) {
+        top: 38%;
+      }
+      #hero-collage > .collage-card:nth-of-type(9),
+      #hero-collage > .collage-card:nth-of-type(10),
+      #hero-collage > .collage-card:nth-of-type(11),
+      #hero-collage > .collage-card:nth-of-type(12) {
+        top: 70%;
+      }
+      #hero-collage > .collage-card:nth-of-type(1),
+      #hero-collage > .collage-card:nth-of-type(5),
+      #hero-collage > .collage-card:nth-of-type(9) {
+        left: 3%;
+      }
+      #hero-collage > .collage-card:nth-of-type(2),
+      #hero-collage > .collage-card:nth-of-type(6),
+      #hero-collage > .collage-card:nth-of-type(10) {
+        left: 27%;
+      }
+      #hero-collage > .collage-card:nth-of-type(3),
+      #hero-collage > .collage-card:nth-of-type(7),
+      #hero-collage > .collage-card:nth-of-type(11) {
+        left: 51%;
+      }
+      #hero-collage > .collage-card:nth-of-type(4),
+      #hero-collage > .collage-card:nth-of-type(8),
+      #hero-collage > .collage-card:nth-of-type(12) {
+        left: 75%;
+      }
+      #hero-collage > .collage-card .visual-placeholder {
+        font-size: 17px;
+      }
+      @media (max-width: 900px) {
+        #hero-collage > .collage-card {
+          width: 22%;
+          padding: 3px;
+          border-width: 3px;
+        }
+        #hero-collage > .collage-card .visual-placeholder {
+          font-size: 12px;
+        }
+      }
+      .flower {
+        position: absolute;
+        z-index: 3;
+        color: #f3c7df;
+        font-family: "Playfair Display", serif;
+        font-size: 31px;
+        line-height: 1;
+        text-shadow: 0 0 18px rgba(245, 170, 221, 0.7);
+        pointer-events: none;
+      }
+      .flower-a {
+        top: 7px;
+        left: 9px;
+        transform: rotate(-18deg);
+      }
+      .flower-b {
+        right: 10px;
+        bottom: 8px;
+        transform: rotate(18deg) scale(0.8);
+      }
+      .flower-c {
+        top: 20%;
+        right: 5%;
+        color: #dca9d4;
+        font-size: 22px;
+        transform: rotate(12deg);
+      }
+      @media (max-width: 900px) {
+        .collage {
+          margin: 0;
+          border: 0;
+          box-shadow: none;
+        }
+        .collage::after {
+          display: none;
+        }
+      }
+      .memories-section {
+        position: relative;
+        overflow: hidden;
+      }
+      .memories-section::before {
+        position: absolute;
+        top: 45px;
+        right: -35px;
+        color: rgba(180, 118, 174, 0.12);
+        content: "❀";
+        font-family: "Playfair Display", serif;
+        font-size: 180px;
+        line-height: 1;
+        transform: rotate(18deg);
+        pointer-events: none;
+      }
+      .archive-intro {
+        margin: 14px 0 0;
+        color: #9b8796;
+        font-family: "Playfair Display", serif;
+        font-size: 15px;
+        font-style: italic;
+        line-height: 1.45;
+      }
+      .archive-divider {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin: 24px 0 26px;
+        color: #b47eae;
+      }
+      .archive-divider span {
+        height: 1px;
+        flex: 1;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(125, 75, 121, 0.28)
+        );
+      }
+      .archive-divider span:last-child {
+        background: linear-gradient(
+          90deg,
+          rgba(125, 75, 121, 0.28),
+          transparent
+        );
+      }
+      .archive-divider b {
+        font-family: "Playfair Display", serif;
+        font-size: 17px;
+        font-weight: 400;
+      }
+      .memory-card {
+        border-radius: 2px 2px 16px 2px;
+      }
+      .memory-card::before {
+        position: absolute;
+        top: -4px;
+        left: 14px;
+        width: 28px;
+        height: 3px;
+        background: #c58abc;
+        content: "";
+        transform: rotate(-3deg);
+      }
+      .memory-card.memory-video::before {
+        background: #9163a6;
+      }
+      .memory-card.memory-audio::before {
+        background: #d19ab7;
+      }
+      .memory-card.memory-audio .memory-thumb {
+        background: radial-gradient(circle at 50% 55%, #b879a8, #48264f 68%);
+      }
+      .memory-card.memory-audio .visual-placeholder {
+        color: #ffe2f0;
+        font-family: "Playfair Display", serif;
+        font-size: 48px;
+      }
+      .memory-thumb::after {
+        position: absolute;
+        inset: 7px;
+        border: 1px solid rgba(255, 244, 249, 0.2);
+        content: "";
+        pointer-events: none;
+      }
+      .memory-meta-dot {
+        color: #b47eae;
+      }
+      @media (max-width: 600px) {
+        .memories-section::before {
+          top: 100px;
+          right: -55px;
+          font-size: 130px;
+        }
+        .archive-intro {
+          font-size: 14px;
+        }
+        .archive-divider {
+          margin: 19px 0 20px;
+        }
+      }
+      .memories-section {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        color: #f9eaf7;
+        background:
+          radial-gradient(
+            circle at 12% 18%,
+            rgba(154, 91, 167, 0.24),
+            transparent 27%
+          ),
+          radial-gradient(
+            circle at 88% 76%,
+            rgba(94, 45, 112, 0.4),
+            transparent 30%
+          ),
+          linear-gradient(135deg, #1d0d29 0%, #281333 48%, #160a20 100%);
+      }
+      .memories-section::after {
+        position: absolute;
+        top: 30px;
+        right: 8%;
+        width: 180px;
+        height: 180px;
+        border: 1px solid rgba(231, 184, 232, 0.14);
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 18px rgba(231, 184, 232, 0.025),
+          0 0 0 36px rgba(231, 184, 232, 0.02);
+        content: "";
+        pointer-events: none;
+      }
+      .memories-section .section-heading,
+      .memories-section .filter-row,
+      .memories-section .archive-divider,
+      .memories-section .memory-grid,
+      .memories-section .empty-memory {
+        position: relative;
+        z-index: 1;
+      }
+      .memories-section .kicker {
+        color: #d9a9d8;
+        letter-spacing: 0.16em;
+      }
+      .memories-section h2 {
+        color: #fff5fc;
+        text-shadow: 0 5px 24px rgba(180, 98, 190, 0.28);
+      }
+      .memories-section h2 em {
+        color: #dba9da;
+      }
+      .archive-intro {
+        color: rgba(249, 234, 247, 0.68);
+      }
+      .memories-section .button-dark {
+        border-color: rgba(246, 207, 239, 0.32);
+        color: #fff7fc;
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 28px rgba(7, 2, 12, 0.22);
+      }
+      .memories-section .button-dark:hover {
+        background: #8e548f;
+      }
+      .filter-row {
+        padding: 12px 14px;
+        border: 1px solid rgba(231, 184, 232, 0.16);
+        border-radius: 18px;
+        background: rgba(10, 4, 17, 0.22);
+        box-shadow:
+          inset 0 1px rgba(255, 255, 255, 0.06),
+          0 14px 38px rgba(8, 2, 13, 0.16);
+      }
+      .filter-tabs {
+        gap: 5px;
+      }
+      .filter {
+        border-color: transparent;
+        border-radius: 999px;
+        color: rgba(255, 239, 253, 0.64);
+        background: transparent;
+        transition:
+          color 180ms ease,
+          background 180ms ease,
+          transform 180ms ease;
+      }
+      .filter:hover {
+        color: #fff;
+        background: rgba(226, 169, 225, 0.12);
+        transform: translateY(-1px);
+      }
+      .filter.active {
+        color: #2a1232;
+        background: #e9b8e2;
+        box-shadow: 0 4px 16px rgba(224, 148, 220, 0.24);
+      }
+      #collection-label {
+        color: rgba(249, 224, 246, 0.52);
+      }
+      .archive-divider {
+        color: #dca9d8;
+      }
+      .archive-divider span {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(214, 153, 212, 0.38)
+        );
+      }
+      .archive-divider span:last-child {
+        background: linear-gradient(
+          90deg,
+          rgba(214, 153, 212, 0.38),
+          transparent
+        );
+      }
+      .memory-grid {
+        perspective: 900px;
+      }
+      .memory-card {
+        border: 1px solid rgba(246, 208, 239, 0.17);
+        background: linear-gradient(
+          145deg,
+          rgba(79, 39, 86, 0.96),
+          rgba(38, 18, 47, 0.98)
+        );
+        box-shadow:
+          0 18px 38px rgba(8, 2, 13, 0.3),
+          inset 0 1px rgba(255, 255, 255, 0.08);
+        animation: memory-rise 650ms both;
+        transition:
+          transform 220ms ease,
+          border-color 220ms ease,
+          box-shadow 220ms ease;
+      }
+      .memory-card:nth-child(2) {
+        animation-delay: 70ms;
+      }
+      .memory-card:nth-child(3) {
+        animation-delay: 140ms;
+      }
+      .memory-card:nth-child(4) {
+        animation-delay: 210ms;
+      }
+      .memory-card:hover {
+        border-color: rgba(239, 183, 235, 0.48);
+        box-shadow:
+          0 24px 48px rgba(8, 2, 13, 0.44),
+          0 0 26px rgba(173, 91, 173, 0.12);
+        transform: translateY(-7px) rotateX(1deg);
+      }
+      .memory-copy h3 {
+        color: #fff1fc;
+      }
+      .memory-copy p {
+        color: rgba(249, 225, 247, 0.58);
+      }
+      .memory-menu {
+        color: rgba(255, 232, 252, 0.72);
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .memory-actions {
+        border-color: rgba(238, 184, 232, 0.24);
+        background: #2e1639;
+        box-shadow: 0 14px 30px rgba(7, 2, 12, 0.38);
+      }
+      .memory-actions button {
+        color: #f8e3f5;
+      }
+      .empty-memory {
+        border-color: rgba(231, 184, 232, 0.22);
+        color: #f8e5f5;
+        background: rgba(31, 13, 42, 0.48);
+      }
+      .empty-memory p {
+        color: rgba(249, 225, 247, 0.62);
+      }
+      @keyframes memory-rise {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .memory-card {
+          animation: none;
+          transition: none;
+        }
+      }
+      .anniversary-gate {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        overflow-y: auto;
+        background: rgba(24, 11, 28, 0.96);
+      }
+      .anniversary-gate[hidden] {
+        display: none;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .anniversary-card {
+        width: min(100%, 430px);
+        padding: 42px 34px 36px;
+        border: 1px solid rgba(246, 215, 239, 0.25);
+        text-align: center;
+        color: #fff5fc;
+        background: linear-gradient(145deg, #41224e, #1d0d29);
+        box-shadow: 0 24px 80px rgba(7, 2, 12, 0.5);
+      }
+      .anniversary-kicker {
+        margin: 0 0 13px;
+        color: #dca9d8;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .anniversary-card h1 {
+        margin: 0;
+        font-family: "Playfair Display", serif;
+        font-size: clamp(2rem, 6vw, 2.8rem);
+        font-weight: 500;
+      }
+      .anniversary-card p:not(.anniversary-kicker):not(.anniversary-error) {
+        margin: 13px 0 25px;
+        color: rgba(249, 234, 247, 0.72);
+      }
+      .anniversary-card form {
+        display: grid;
+        gap: 12px;
+      }
+      .anniversary-card input {
+        width: 100%;
+        padding: 13px 15px;
+        border: 1px solid rgba(246, 215, 239, 0.3);
+        border-radius: 2px;
+        color: #fff;
+        background: rgba(10, 4, 17, 0.35);
+        font: inherit;
+        text-align: center;
+      }
+      .anniversary-card input:focus {
+        outline: 2px solid #dca9d8;
+        outline-offset: 2px;
+      }
+      .anniversary-card button {
+        padding: 12px 18px;
+        border: 0;
+        border-radius: 2px;
+        color: #2a1232;
+        background: #e9b8e2;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .anniversary-card button:hover {
+        background: #f5d5ee;
+      }
+      .anniversary-error {
+        min-height: 21px;
+        margin: 0;
+        color: #f3b4c9;
+        font-size: 13px;
+      }
+      .love-popup {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(24, 11, 28, 0.7);
+      }
+      .love-popup[hidden] {
+        display: none;
+      }
+      .love-card {
+        width: min(100%, 360px);
+        padding: 34px 28px 28px;
+        border: 1px solid rgba(246, 215, 239, 0.3);
+        text-align: center;
+        color: #fff5fc;
+        background: linear-gradient(145deg, #6d3f76, #28132f);
+        box-shadow: 0 24px 70px rgba(7, 2, 12, 0.45);
+      }
+      .love-card h2 {
+        margin: 0;
+        font-family: "Playfair Display", serif;
+        font-size: 2.2rem;
+        font-weight: 500;
+      }
+      .love-kicker {
+        margin: 0 0 10px;
+        color: #f5cadf;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .love-card p {
+        margin: 10px 0 22px;
+        color: rgba(249, 234, 247, 0.78);
+      }
+      .love-status {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin: 0 0 20px;
+        color: rgba(249, 234, 247, 0.62);
+        font-size: 10px;
+      }
+      .love-status span {
+        padding: 5px 7px;
+        border: 1px solid rgba(246, 215, 239, 0.18);
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .love-actions {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        min-height: 84px;
+      }
+      .love-button {
+        min-width: 92px;
+        padding: 11px 16px;
+        border: 1px solid rgba(246, 215, 239, 0.35);
+        border-radius: 2px;
+        color: #2a1232;
+        background: #e9b8e2;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .love-button:hover {
+        background: #f5d5ee;
+      }
+      .love-button-no {
+        position: absolute;
+        left: calc(50% + 6px);
+        top: 0;
+        color: #fff5fc;
+        background: rgba(255, 255, 255, 0.1);
+        transition:
+          left 180ms ease,
+          top 180ms ease;
+      }
+      .love-button-no:hover {
+        color: #2a1232;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="anniversary-gate" id="anniversary-gate">
+      <div
+        class="anniversary-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="anniversary-title"
+      >
+        <p class="anniversary-kicker">A quick question beng</p>
+        <h1 id="anniversary-title">Whats the date of our Anniversarry</h1>
+        <p>Enter the date to open our little forever.</p>
+        <form id="anniversary-form">
+          <label class="sr-only" for="anniversary-answer"
+            >Anniversary date</label
+          >
+          <input
+            id="anniversary-answer"
+            type="text"
+            placeholder="MM/DD/YY"
+            autocomplete="off"
+            required
+          />
+          <button type="submit">Enter our memories</button>
+          <p
+            class="anniversary-error"
+            id="anniversary-error"
+            role="alert"
+            aria-live="polite"
+          ></p>
+        </form>
+      </div>
+    </div>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="Our little forever home"
+        ><span class="wordmark-dot"></span> our memories i kept</a
+      >
+      <nav class="site-nav" aria-label="Main navigation">
+        <a class="active" href="#top">Home</a><a href="#memories">Memories</a
+        ><a href="#letter">A little note</a>
+      </nav>
+      <button class="header-add" id="add-media" type="button">
+        <span>+</span> Add memory
+      </button>
+      <input
+        id="file-input"
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/wav,audio/mp4,audio/ogg"
+        multiple
+        hidden
+      />
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="kicker">Our chapters Since day 1<span>♡</span></p>
+          <h1>For all the<br /><em>moments we keep.</em></h1>
+          <p class="hero-intro">
+            “The sweetest parts of life are the ones we get to remember
+            together.”
+          </p>
+          <div class="hero-actions">
+            <a class="button button-light" href="#memories"
+              >Open our memories <span>↘</span></a
+            ><button class="play-link" id="play-hero" type="button">
+              <span class="play-circle">▶</span> play our little reel
+            </button>
+          </div>
+          <div class="hero-signoff">
+            <span class="mini-line"></span
+            ><span>made with love by dodongdose</span>
+          </div>
+        </div>
+        <div
+          class="collage"
+          id="hero-collage"
+          aria-label="A collage of our memories"
+        >
+          <div class="collage-card card-main">
+            <div class="visual visual-main">
+              <img id="hero-cover-image" alt="Our favorite chapter" hidden />
+              <video
+                id="hero-cover-video"
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                hidden
+              ></video>
+              <span class="visual-placeholder" id="hero-cover-placeholder"
+                >our<br />favorite<br />chapter</span
+              >
+            </div>
+            <span class="tape tape-left"></span
+            ><span class="photo-caption"
+              >“The good days are<br />the ones with you.”</span
+            >
+          </div>
+          <div class="collage-card collage-slot card-top">
+            <div class="visual visual-top" id="collage-top"><span>✦</span></div>
+          </div>
+          <div class="collage-card collage-slot card-small">
+            <div class="visual visual-small" id="collage-small">
+              <span>♡</span>
+            </div>
+            <span class="date-stamp">JUNE / 24</span>
+          </div>
+          <div class="collage-card collage-slot card-polaroid">
+            <div class="visual visual-polaroid" id="collage-polaroid">
+              <span>“us, always.”</span>
+            </div>
+            <span class="polaroid-caption">“you + me.”</span>
+          </div>
+          <div class="collage-card collage-slot collage-frame">
+            <div class="visual visual-extra" id="collage-extra-1">
+              <span>photo</span>
+            </div>
+          </div>
+          <div class="collage-card collage-slot collage-frame">
+            <div class="visual visual-extra" id="collage-extra-2">
+              <span>memory</span>
+            </div>
+          </div>
+          <div class="collage-card collage-slot collage-frame">
+            <div class="visual visual-extra" id="collage-extra-3">
+              <span>us</span>
+            </div>
+          </div>
+          <div class="collage-card collage-slot collage-frame">
+            <div class="visual visual-extra" id="collage-extra-4">
+              <span>always</span>
+            </div>
+          </div>
+          <div class="collage-card collage-slot collage-frame">
+            <div class="visual visual-extra" id="collage-extra-5">
+              <span>♡</span>
+            </div>
+          </div>
+          <div class="collage-card collage-slot collage-frame">
+            <div class="visual visual-extra" id="collage-extra-6">
+              <span>moment</span>
+            </div>
+          </div>
+          <div class="collage-card collage-slot collage-frame">
+            <div class="visual visual-extra" id="collage-extra-7">
+              <span>together</span>
+            </div>
+          </div>
+          <div class="collage-card collage-slot collage-frame">
+            <div class="visual visual-extra" id="collage-extra-8">
+              <span>forever</span>
+            </div>
+          </div>
+          <span class="scribble scribble-one">∞</span
+          ><span class="scribble scribble-two">“”</span>
+          <span class="flower flower-a" aria-hidden="true">✿</span>
+          <span class="flower flower-b" aria-hidden="true">✿</span>
+          <span class="flower flower-c" aria-hidden="true">❀</span>
+        </div>
+      </section>
+
+      <section class="stats-row" aria-label="Memory collection status">
+        <div>
+          <strong id="memory-total">0</strong><span>little memories</span>
+        </div>
+        <div>
+          <strong id="video-total">0</strong><span>moving moments</span>
+        </div>
+        <div><strong>∞</strong><span>more to come</span></div>
+        <p>“I choose you.<br />Every version of you.”</p>
+      </section>
+
+      <section class="memories-section" id="memories">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">the archive</p>
+            <h2>Scenes from <em>us.</em></h2>
+            <p class="archive-intro">
+              A collection of small moments, kept close and<br />opened whenever
+              we miss each other.
+            </p>
+          </div>
+          <button
+            class="button button-dark"
+            id="add-memory-secondary"
+            type="button"
+          >
+            + Add a memory
+          </button>
+        </div>
+        <div class="filter-row">
+          <div class="filter-tabs">
+            <button class="filter active" data-filter="all" type="button">
+              All memories</button
+            ><button class="filter" data-filter="video" type="button">
+              Videos</button
+            ><button class="filter" data-filter="photo" type="button">
+              Photos</button
+            ><button class="filter" data-filter="audio" type="button">
+              Music</button
+            ><button class="filter" data-filter="favorite" type="button">
+              Favorites
+            </button>
+          </div>
+          <span id="collection-label">Your private collection</span>
+        </div>
+        <div class="archive-divider" aria-hidden="true">
+          <span></span><b>✿</b><span></span>
+        </div>
+        <div class="memory-grid" id="memory-grid"></div>
+        <div class="empty-memory" id="empty-memory">
+          <span>♡</span>
+          <h3>Our first memory is waiting.</h3>
+          <p>Drop in a photo or video and make this little corner yours.</p>
+          <button class="button button-dark" id="empty-add" type="button">
+            Add the first one
+          </button>
+        </div>
+      </section>
+
+      <section class="note-section" id="letter">
+        <div class="note-card">
+          <div class="note-stamp">♡</div>
+          <p class="kicker">My letter for you</p>
+          <h2>HAPPY ANNIVERSARY GA!<br /><em>I love You Krisyyline.</em></h2>
+          <p class="note-text">
+            “Thank u for being a amazing partner and always choosing us every
+            day and I WILL ALWAYS LOVE U Krisyyline. I love you so much and I
+            will always be here for you no matter what. I will always be your
+            shoulder to cry on, your best friend, your partner in libak2, your
+            lover, your habal2, your one call away... and your everything.
+            Always Remember I will never stop loving u bebeng Sorry This all i
+            can do for now, I promise i will give u everything in the future....
+            .”
+          </p>
+          <div class="signature">-dodong_dose <span>♡</span></div>
+        </div>
+        <div class="note-decoration">with<br />all my<br /><em>heart</em></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>our little forever</span
+      ><span>kept safely, just for us · <span id="footer-year"></span></span>
+    </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="viewer" id="viewer" hidden>
+      <button
+        class="viewer-close"
+        id="viewer-close"
+        type="button"
+        aria-label="Close viewer"
+      >
+        ×
+      </button>
+      <div class="viewer-content" id="viewer-content"></div>
+      <p class="viewer-title" id="viewer-title"></p>
+    </div>
+    <div class="love-popup" id="love-popup" hidden>
+      <div
+        class="love-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="love-heading"
+      >
+        <p class="love-kicker">URGENT RELATIONSHIP MEETING</p>
+        <h2 id="love-heading">Do u want us to continue<br />or buwag nata?</h2>
+        <p id="love-message">
+          Choose wisely... the No button has trust issues ♡
+        </p>
+        <div class="love-status" aria-hidden="true">
+          <span>love: 100%</span><span>drama: loading...</span>
+        </div>
+        <div class="love-actions" id="love-actions">
+          <button class="love-button" id="love-yes" type="button">
+            Yes, obviously
+          </button>
+          <button class="love-button love-button-no" id="love-no" type="button">
+            No / buwag?
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="title-dialog" id="title-dialog" hidden>
+      <div class="dialog-card">
+        <button
+          class="dialog-close"
+          id="dialog-cancel"
+          type="button"
+          aria-label="Cancel"
+        >
+          ×
+        </button>
+        <p class="kicker">new memory</p>
+        <h2 id="dialog-heading">Give it a little title.</h2>
+        <p id="dialog-file" class="dialog-file"></p>
+        <label for="memory-title">Memory title</label
+        ><input
+          id="memory-title"
+          type="text"
+          maxlength="60"
+          placeholder="The day we..."
+          autocomplete="off"
+        />
+        <div class="dialog-actions">
+          <button class="button button-light" id="dialog-submit" type="button">
+            Save memory ↗
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

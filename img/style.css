@@ -1,29 +1,3 @@
-/* ==========================================================
-   1 TAP SERVICES - style.css
-
-   Sections in this file:
-   1. Basics (colors, fonts)
-   2. Buttons
-   3. Navigation
-   4. Hero Section
-   5. Popular Services
-   6. Discount Section
-   7. Why Choose Us
-   8. Services
-   9. About
-   10. Contact
-   11. Footer
-   12. Popup (Modal)
-   13. Tablet
-   14. Mobile
-   ========================================================== */
-
-
-/* ==========================================================
-   1. BASICS
-   TIP: To change the colors of the whole website,
-   change the values in :root below.
-   ========================================================== */
 :root {
   --dark: #12263a;        /* dark blue: hero, footer, headings */
   --main: #0f766e;        /* teal: main buttons and links */
@@ -359,12 +333,13 @@ section {
   gap: 20px;
 }
 
-/* Bigger orange icon for the hot cards */
-.popular-card .icon {
-  width: 76px;
-  height: 76px;
-  font-size: 2.3rem;
-  background: #ffe9d1;
+/* Photo on the left side of each hot card */
+.card-photo {
+  width: 170px;
+  align-self: stretch;     /* same height as the text next to it */
+  min-height: 170px;
+  object-fit: cover;       /* crops the photo to fit without stretching */
+  border-radius: 12px;
 }
 
 .hot-tag {
@@ -390,24 +365,33 @@ section {
   display: grid;
   grid-template-columns: repeat(4, 1fr);   /* 4 cards in a row */
   gap: 24px;
-  padding-top: 14px;   /* room for the badges that stick out of the cards */
 }
 
 .discount-card {
   background: var(--white);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 34px 22px 22px 22px;
+  padding: 22px;
   position: relative;   /* lets the badge sit on the card corner */
   display: flex;
   flex-direction: column;
 }
 
-/* The red discount badge */
+/* Photo at the top of each discount card */
+.discount-photo {
+  display: block;
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+/* The red discount badge (sits on the top-right of the photo) */
 .discount-badge {
   position: absolute;
-  top: -14px;
-  right: 16px;
+  top: 32px;
+  right: 32px;
   background: var(--sale);
   color: var(--white);
   font-size: 1.15rem;
@@ -484,7 +468,13 @@ section {
   flex-direction: column;
 }
 
-.service-card .icon {
+/* Photo at the top of each service card */
+.service-photo {
+  display: block;
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 12px;
   margin-bottom: 14px;
 }
 
@@ -522,6 +512,31 @@ section {
 }
 
 
+/* Photo + names of the website creators */
+.about-team {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: var(--light-bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-top: 32px;
+}
+
+.about-team-photo {
+  width: 240px;
+  height: 320px;
+  flex-shrink: 0;
+  object-fit: cover;
+  object-position: center 40%;   /* keeps faces in view if the photo is cropped */
+  border-radius: 12px;
+}
+
+.about-team-text h3 {
+  font-size: 1.5rem;
+}
+
+
 /* ==========================================================
    10. CONTACT
    ========================================================== */
@@ -551,6 +566,21 @@ section {
 .contact-item h3,
 .contact-item p {
   margin: 0;
+}
+
+/* Map under the contact section */
+.map-box {
+  margin-top: 32px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.map-box iframe {
+  display: block;
+  width: 100%;
+  height: 380px;
+  border: 0;
 }
 
 /* The form box */
@@ -768,6 +798,12 @@ section {
   .section {
     padding: 50px 0;
   }
+
+  /* Team photo goes on top of the text */
+  .about-team {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 
 /* Step 2: small phones, up to 600px wide */
@@ -789,10 +825,28 @@ section {
     width: 100%;   /* full-width buttons are easy to tap */
   }
 
-  /* Hot cards: icon on top, text below */
+  /* Hot cards: photo on top, text below */
   .popular-card {
     flex-direction: column;
-    padding: 24px;
+    padding: 20px;
+  }
+
+  .card-photo {
+    width: 100%;
+    height: 180px;
+    min-height: 0;
+    align-self: auto;
+  }
+
+  .about-team-photo {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    aspect-ratio: 3 / 4;
+  }
+
+  .map-box iframe {
+    height: 300px;
   }
 
   /* All card grids become 1 column */
