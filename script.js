@@ -68,6 +68,49 @@ async function cloudDelete(item) { if (!cloudEnabled || !item.cloudId) return; a
 function showToast(text) { const toast = $("#toast"); toast.textContent = text; toast.classList.add("show"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("show"), 3500); }
 function fileUrl(item) { if (item.publicUrl) return item.publicUrl; if (!item.file) return ""; if (!state.urls.has(item.id)) state.urls.set(item.id, URL.createObjectURL(item.file)); return state.urls.get(item.id); }
 function thumbUrl(item) { if (item.publicUrl) return item.publicUrl; if (!item.thumbnail) return ""; if (!state.thumbUrls.has(item.id)) state.thumbUrls.set(item.id, URL.createObjectURL(item.thumbnail)); return state.thumbUrls.get(item.id); }
+function optimizeFileForGallery(file) {
+  if (!file || !file.type || !file.type.startsWith("image/")) return Promise.resolve(file);
+  if (file.size <= 700_000) return Promise.resolve(file);
+
+  return new Promise((resolve) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    image.onload = () => {
+      const maxWidth = 1400;
+      const maxHeight = 1400;
+      let width = image.width;
+      let height = image.height;
+      const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+      width = Math.max(1, Math.round(width * scale));
+      height = Math.max(1, Math.round(height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file);
+        return;
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(blob || file);
+      }, "image/jpeg", 0.8);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file);
+    };
+
+    image.src = objectUrl;
+  });
+}
 function revokeItemUrls(id) { [state.urls, state.thumbUrls].forEach(map => { if (map.has(id)) { URL.revokeObjectURL(map.get(id)); map.delete(id); } }); }
 function filtered() { return state.items.filter(item => state.filter === "all" || item.type === state.filter || state.filter === "favorite" && item.favorite); }
 function render() {
@@ -189,12 +232,18 @@ function generateThumbnail(file) {
 
     function captureFrame() {
       if (finished || !video.videoWidth || !video.videoHeight) return;
-      const width = Math.min(video.videoWidth, 900);
+      const maxSize = 480;
+      const width = Math.min(video.videoWidth, maxSize);
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = Math.round(width * video.videoHeight / video.videoWidth);
-      canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(blob => blob ? finish(null, blob) : finish(new Error("Thumbnail failed")), "image/jpeg", .82);
+      const context = canvas.getContext("2d");
+      if (!context) {
+        finish(new Error("Thumbnail canvas unavailable"));
+        return;
+      }
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => blob ? finish(null, blob) : finish(new Error("Thumbnail failed")), "image/jpeg", .72);
     }
 
     video.onerror = () => finish(new Error("Unreadable video"));
@@ -207,14 +256,15 @@ function generateThumbnail(file) {
     timer = setTimeout(() => {
       if (video.videoWidth && video.videoHeight) captureFrame();
       else finish(new Error("Video preview timed out"));
-    }, 8000);
+    }, 3500);
     video.src = url;
     video.load();
   });
 }
+
 async function addSelectedFiles(files) { for (const file of files) { const type = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : file.type.startsWith("image/") ? "photo" : null; if (!type) { showToast(`${file.name} is not a supported photo, video, or audio file.`); continue; } state.pendingFiles = [file]; $("#dialog-file").textContent = file.name; $("#memory-title").value = file.name.replace(/\.[^/.]+$/, ""); $("#title-dialog").hidden = false; $("#memory-title").focus(); await new Promise(resolve => { state.resolveTitle = resolve; }); }
   await refresh(); }
-async function savePending() { const title = $("#memory-title").value.trim(); if (!title) return; if (state.editingItem) { state.editingItem.title = title; await updateItem(state.editingItem); try { await cloudUpdate(state.editingItem); } catch { showToast("Renamed here, but the shared copy could not be updated."); } state.editingItem = null; $("#title-dialog").hidden = true; $("#dialog-heading").textContent = "Give it a little title."; await refresh(); return; } const file = state.pendingFiles[0]; if (!file) return; const type = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : "photo"; const submit = $("#dialog-submit"); submit.disabled = true; submit.textContent = type === "video" ? "Preparing memory..." : "Saving memory..."; let thumbnail = null; if (type === "video") { try { thumbnail = await generateThumbnail(file); } catch { showToast("Preview unavailable; saving the original video instead."); } } const item = { file, thumbnail, title, type, favorite: false, addedAt: Date.now() }; try { if (cloudEnabled) { try { Object.assign(item, await cloudAdd(item)); } catch { showToast("Shared upload failed; keeping this memory on this device."); } } await addItem(item); state.items = [item, ...state.items].sort((a, b) => b.addedAt - a.addedAt); render(); } catch { showToast("This memory could not be saved."); } state.pendingFiles = []; $("#title-dialog").hidden = true; $("#dialog-heading").textContent = "Give it a little title."; submit.disabled = false; submit.textContent = "Save memory ↗"; state.resolveTitle?.(); state.resolveTitle = null; }
+async function savePending() { const title = $("#memory-title").value.trim(); if (!title) return; if (state.editingItem) { state.editingItem.title = title; await updateItem(state.editingItem); try { await cloudUpdate(state.editingItem); } catch { showToast("Renamed here, but the shared copy could not be updated."); } state.editingItem = null; $("#title-dialog").hidden = true; $("#dialog-heading").textContent = "Give it a little title."; await refresh(); return; } const file = state.pendingFiles[0]; if (!file) return; const type = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : "photo"; const submit = $("#dialog-submit"); submit.disabled = true; submit.textContent = type === "video" ? "Preparing memory..." : "Saving memory..."; let thumbnail = null; if (type === "video") { try { thumbnail = await generateThumbnail(file); } catch { showToast("Preview unavailable; saving the original video instead."); } } const optimizedFile = type === "photo" ? await optimizeFileForGallery(file) : file; const item = { file: optimizedFile, thumbnail, title, type, favorite: false, addedAt: Date.now() }; try { if (cloudEnabled) { try { Object.assign(item, await cloudAdd(item)); } catch { showToast("Shared upload failed; keeping this memory on this device."); } } await addItem(item); state.items = [item, ...state.items].sort((a, b) => b.addedAt - a.addedAt); render(); } catch { showToast("This memory could not be saved."); } state.pendingFiles = []; $("#title-dialog").hidden = true; $("#dialog-heading").textContent = "Give it a little title."; submit.disabled = false; submit.textContent = "Save memory ↗"; state.resolveTitle?.(); state.resolveTitle = null; }
 async function refresh() { const localItems = await getAll(); let sharedItems = []; try { sharedItems = await cloudItems(); } catch { if (cloudEnabled) showToast("Shared memories are temporarily unavailable."); } const sharedIds = new Set(sharedItems.map(item => item.cloudId)); const local = localItems.filter(item => !item.cloudId || !sharedIds.has(item.cloudId)); state.items = [...sharedItems, ...local].sort((a, b) => b.addedAt - a.addedAt); render(); }
 
 $("#add-media").addEventListener("click", () => $("#file-input").click()); $("#add-memory-secondary").addEventListener("click", () => $("#file-input").click()); $("#empty-add").addEventListener("click", () => $("#file-input").click()); $("#file-input").addEventListener("change", event => { if (event.target.files.length) addSelectedFiles([...event.target.files]); event.target.value = ""; }); $("#dialog-submit").addEventListener("click", savePending); $("#dialog-cancel").addEventListener("click", () => { $("#title-dialog").hidden = true; state.pendingFiles = []; state.editingItem = null; $("#dialog-heading").textContent = "Give it a little title."; state.resolveTitle?.(); state.resolveTitle = null; }); $("#memory-title").addEventListener("keydown", event => { if (event.key === "Enter") savePending(); }); $("#viewer-close").addEventListener("click", closeViewer); $("#play-hero").addEventListener("click", playReel);
