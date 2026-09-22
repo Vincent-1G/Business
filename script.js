@@ -78,8 +78,16 @@ function render() {
   renderHeroCover();
 }
 function renderHeroCover() {
-  const coverId = localStorage.getItem("hero-cover-id");
-  const cover = state.items.find(item => String(item.id) === coverId && (item.type === "photo" || item.type === "video"));
+  let coverId = localStorage.getItem("hero-cover-id");
+  let cover = state.items.find(item => String(item.id) === coverId && (item.type === "photo" || item.type === "video"));
+
+  if (!cover) {
+    cover = state.items.find(item => item.type === "photo" || item.type === "video");
+    if (cover) {
+      localStorage.setItem("hero-cover-id", String(cover.id));
+    }
+  }
+
   const image = $("#hero-cover-image");
   const video = $("#hero-cover-video");
   const placeholder = $("#hero-cover-placeholder");
