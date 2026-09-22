@@ -89,7 +89,7 @@ function renderHeroCover() {
   if (cover?.type === "video") {
     video.src = fileUrl(cover);
     video.hidden = false;
-    video.preload = "metadata";
+    video.preload = "auto";
     video.muted = true;
     video.playsInline = true;
     video.play().catch(() => showToast("Tap the hero video to start it."));
@@ -97,7 +97,8 @@ function renderHeroCover() {
   } else if (cover?.type === "photo") {
     image.src = fileUrl(cover);
     image.loading = "eager";
-    image.decoding = "async";
+    image.decoding = "sync";
+    image.fetchPriority = "high";
     image.hidden = false;
     placeholder.hidden = true;
   } else {
@@ -130,14 +131,15 @@ function renderCollageDetails(hero) {
     media.className = "collage-media";
     media.alt = item.title;
     media.title = item.title;
-    media.loading = "lazy";
-    media.decoding = "async";
+    media.loading = "eager";
+    media.decoding = "sync";
+    media.fetchPriority = "high";
     media.src = fileUrl(item);
     if (item.type === "video") {
       media.muted = true;
       media.loop = true;
       media.playsInline = true;
-      media.preload = "metadata";
+      media.preload = "auto";
       media.autoplay = false;
     }
     slot.appendChild(media);
@@ -146,7 +148,7 @@ function renderCollageDetails(hero) {
 function createCard(item) {
   const card = document.createElement("article"); card.className = `memory-card memory-${item.type}`; card.dataset.id = item.id;
   const thumb = document.createElement("div"); thumb.className = "memory-thumb";
-  if (item.type === "photo") { const image = document.createElement("img"); image.src = fileUrl(item); image.alt = item.title; image.loading = "lazy"; image.decoding = "async"; image.fetchPriority = "low"; thumb.appendChild(image); } else if (item.type === "video") { if (item.thumbnail || item.thumbnailUrl) { const image = document.createElement("img"); image.src = item.thumbnailUrl || thumbUrl(item); image.alt = `${item.title} video still`; image.loading = "lazy"; image.decoding = "async"; image.fetchPriority = "low"; thumb.appendChild(image); } else { const preview = document.createElement("video"); preview.className = "memory-video-preview"; preview.src = fileUrl(item); preview.muted = true; preview.playsInline = true; preview.preload = "metadata"; preview.loading = "lazy"; preview.setAttribute("aria-label", `${item.title} video preview`); preview.addEventListener("loadeddata", () => { preview.currentTime = Math.min(0.1, preview.duration || 0); }, { once: true }); preview.addEventListener("error", () => { preview.remove(); thumb.insertAdjacentHTML("afterbegin", '<span class="visual-placeholder">a moving<br>memory</span>'); }, { once: true }); thumb.appendChild(preview); } } else { thumb.innerHTML = `<span class="visual-placeholder">${item.type === "audio" ? "♫" : "a moving<br>memory"}</span>`; }
+  if (item.type === "photo") { const image = document.createElement("img"); image.src = fileUrl(item); image.alt = item.title; image.loading = "eager"; image.decoding = "sync"; image.fetchPriority = "high"; thumb.appendChild(image); } else if (item.type === "video") { if (item.thumbnail || item.thumbnailUrl) { const image = document.createElement("img"); image.src = item.thumbnailUrl || thumbUrl(item); image.alt = `${item.title} video still`; image.loading = "eager"; image.decoding = "sync"; image.fetchPriority = "high"; thumb.appendChild(image); } else { const preview = document.createElement("video"); preview.className = "memory-video-preview"; preview.src = fileUrl(item); preview.muted = true; preview.playsInline = true; preview.preload = "auto"; preview.loading = "eager"; preview.setAttribute("aria-label", `${item.title} video preview`); preview.addEventListener("loadeddata", () => { preview.currentTime = Math.min(0.1, preview.duration || 0); }, { once: true }); preview.addEventListener("error", () => { preview.remove(); thumb.insertAdjacentHTML("afterbegin", '<span class="visual-placeholder">a moving<br>memory</span>'); }, { once: true }); thumb.appendChild(preview); } } else { thumb.innerHTML = `<span class="visual-placeholder">${item.type === "audio" ? "♫" : "a moving<br>memory"}</span>`; }
   if (item.type === "video") { const play = document.createElement("span"); play.className = "memory-play"; play.textContent = "▶"; thumb.appendChild(play); } else if (item.type === "audio") { const music = document.createElement("span"); music.className = "memory-play"; music.textContent = "♫"; thumb.appendChild(music); }
   const copy = document.createElement("div"); copy.className = "memory-copy"; copy.innerHTML = "<h3></h3><p></p>"; copy.querySelector("h3").textContent = item.title; copy.querySelector("p").textContent = `${item.type === "video" ? "moving moment" : item.type === "audio" ? "music memory" : "photograph"} · ${new Date(item.addedAt).toLocaleDateString(undefined, { month: "long", year: "numeric" })}`;
   const menu = document.createElement("button"); menu.className = "memory-menu"; menu.type = "button"; menu.textContent = "···"; menu.setAttribute("aria-label", `Options for ${item.title}`);
