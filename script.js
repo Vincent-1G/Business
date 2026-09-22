@@ -99,7 +99,7 @@ function optimizeFileForGallery(file) {
       context.drawImage(image, 0, 0, width, height);
       canvas.toBlob(blob => {
         URL.revokeObjectURL(objectUrl);
-        resolve(blob || file);
+        resolve(blob ? new File([blob], file.name, { type: "image/jpeg", lastModified: file.lastModified }) : file);
       }, "image/jpeg", 0.8);
     };
 
@@ -262,8 +262,46 @@ function generateThumbnail(file) {
   });
 }
 
-async function addSelectedFiles(files) { for (const file of files) { const type = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : file.type.startsWith("image/") ? "photo" : null; if (!type) { showToast(`${file.name} is not a supported photo, video, or audio file.`); continue; } state.pendingFiles = [file]; $("#dialog-file").textContent = file.name; $("#memory-title").value = file.name.replace(/\.[^/.]+$/, ""); $("#title-dialog").hidden = false; $("#memory-title").focus(); await new Promise(resolve => { state.resolveTitle = resolve; }); }
-  await refresh(); }
+async function addSelectedFiles(files) {
+  const items = files.map(file => {
+    const type = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : file.type.startsWith("image/") ? "photo" : null;
+    if (!type) {
+      showToast(`${file.name} is not a supported photo, video, or audio file.`);
+      return null;
+    }
+    return { file, thumbnail: null, title: file.name.replace(/\.[^/.]+$/, ""), type, favorite: false, addedAt: Date.now() };
+  }).filter(Boolean);
+  if (!items.length) return;
+
+  state.items = [...items, ...state.items].sort((a, b) => b.addedAt - a.addedAt);
+  render();
+  showToast(`${items.length} ${items.length === 1 ? "memory" : "memories"} added.`);
+
+  await Promise.all(items.map(async item => {
+    item.id = await addItem(item);
+  }));
+  await Promise.all(items.map(async item => {
+    try {
+      if (item.type === "photo") item.file = await optimizeFileForGallery(item.file);
+      if (item.type === "video") item.thumbnail = await generateThumbnail(item.file);
+      await updateItem(item);
+      render();
+    } catch {
+      showToast(`Saved ${item.title}, but its preview could not be optimized.`);
+    }
+  }));
+
+  if (cloudEnabled) {
+    await Promise.all(items.map(async item => {
+      try {
+        Object.assign(item, await cloudAdd(item));
+        await updateItem(item);
+      } catch {
+        showToast(`${item.title} stayed on this device; shared upload failed.`);
+      }
+    }));
+  }
+}
 async function savePending() { const title = $("#memory-title").value.trim(); if (!title) return; if (state.editingItem) { state.editingItem.title = title; await updateItem(state.editingItem); try { await cloudUpdate(state.editingItem); } catch { showToast("Renamed here, but the shared copy could not be updated."); } state.editingItem = null; $("#title-dialog").hidden = true; $("#dialog-heading").textContent = "Give it a little title."; await refresh(); return; } const file = state.pendingFiles[0]; if (!file) return; const type = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : "photo"; const submit = $("#dialog-submit"); submit.disabled = true; submit.textContent = type === "video" ? "Preparing memory..." : "Saving memory..."; let thumbnail = null; if (type === "video") { try { thumbnail = await generateThumbnail(file); } catch { showToast("Preview unavailable; saving the original video instead."); } } const optimizedFile = type === "photo" ? await optimizeFileForGallery(file) : file; const item = { file: optimizedFile, thumbnail, title, type, favorite: false, addedAt: Date.now() }; try { if (cloudEnabled) { try { Object.assign(item, await cloudAdd(item)); } catch { showToast("Shared upload failed; keeping this memory on this device."); } } await addItem(item); state.items = [item, ...state.items].sort((a, b) => b.addedAt - a.addedAt); render(); } catch { showToast("This memory could not be saved."); } state.pendingFiles = []; $("#title-dialog").hidden = true; $("#dialog-heading").textContent = "Give it a little title."; submit.disabled = false; submit.textContent = "Save memory ↗"; state.resolveTitle?.(); state.resolveTitle = null; }
 async function refresh() { const localItems = await getAll(); let sharedItems = []; try { sharedItems = await cloudItems(); } catch { if (cloudEnabled) showToast("Shared memories are temporarily unavailable."); } const sharedIds = new Set(sharedItems.map(item => item.cloudId)); const local = localItems.filter(item => !item.cloudId || !sharedIds.has(item.cloudId)); state.items = [...sharedItems, ...local].sort((a, b) => b.addedAt - a.addedAt); render(); }
 
