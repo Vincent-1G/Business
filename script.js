@@ -4,18 +4,8 @@ const DB_NAME = "little-forever-memories";
 const STORE = "memories";
 const CLOUD = window.MEMORY_CLOUD_CONFIG || {};
 const cloudEnabled = Boolean(CLOUD.url && CLOUD.anonKey && CLOUD.bucket);
-const ORBIT_IDS_KEY = "orbit-photo-ids";
 const DELETE_PIN = "1111";
-function loadOrbitPhotoIds() {
-  try {
-    const ids = JSON.parse(localStorage.getItem(ORBIT_IDS_KEY) || "[]");
-    return new Set(Array.isArray(ids) ? ids : []);
-  } catch {
-    return new Set();
-  }
-}
-function orbitPhotoKey(item) { return `${item.title}|${new Date(item.addedAt).getTime()}`; }
-const state = { items: [], filter: "all", urls: new Map(), thumbUrls: new Map(), pendingFiles: [], editingItem: null, reel: [], reelIndex: 0, orbitTimer: null, orbitPhotoIds: loadOrbitPhotoIds(), pendingDelete: null };
+const state = { items: [], filter: "all", urls: new Map(), thumbUrls: new Map(), pendingFiles: [], editingItem: null, reel: [], reelIndex: 0, orbitTimer: null, pendingDelete: null };
 const $ = selector => document.querySelector(selector);
 const grid = $("#memory-grid");
 
@@ -73,8 +63,9 @@ async function cloudRequest(path, options = {}) { const response = await fetch(`
 async function cloudUpload(file, path) { const response = await fetch(`${CLOUD.url.replace(/\/$/, "")}/storage/v1/object/${CLOUD.bucket}/${path}`, { method: "POST", headers: cloudHeaders(), body: file }); if (!response.ok) throw new Error(`Cloud upload failed: ${response.status}`); return path; }
 async function cloudSignedUrl(path) { const response = await cloudRequest(`/storage/v1/object/sign/${CLOUD.bucket}/${encodeURIComponent(path)}`, { method: "POST", body: JSON.stringify({ expiresIn: 3600 }) }); return `${CLOUD.url.replace(/\/$/, "")}/storage/v1${response.signedURL}`; }
 async function cloudAdd(item) { const path = `${crypto.randomUUID()}-${item.file.name.replace(/[^a-z0-9._-]/gi, "-")}`; await cloudUpload(item.file, path); const publicUrl = await cloudSignedUrl(path); const remote = await cloudRequest("/rest/v1/memories", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ title: item.title, type: item.type, favorite: false, added_at: item.addedAt, storage_path: path, public_url: publicUrl }) }); return { ...item, cloudId: remote[0].id, publicUrl, storagePath: path }; }
-async function cloudItems() { if (!cloudEnabled) return []; const rows = await cloudRequest("/rest/v1/memories?select=*&order=added_at.desc"); return Promise.all(rows.map(async row => ({ id: `cloud-${row.id}`, cloudId: row.id, title: row.title, type: row.type, favorite: row.favorite, addedAt: row.added_at, publicUrl: await cloudSignedUrl(row.storage_path).catch(() => row.public_url), storagePath: row.storage_path }))); }
+async function cloudItems() { if (!cloudEnabled) return []; const rows = await cloudRequest("/rest/v1/memories?select=*&order=added_at.desc"); return Promise.all(rows.map(async row => ({ id: `cloud-${row.id}`, cloudId: row.id, title: row.title, type: row.type, favorite: row.favorite, floating: Boolean(row.floating), addedAt: row.added_at, publicUrl: await cloudSignedUrl(row.storage_path).catch(() => row.public_url), storagePath: row.storage_path }))); }
 async function cloudUpdate(item) { if (!cloudEnabled || !item.cloudId) return; await cloudRequest(`/rest/v1/memories?id=eq.${encodeURIComponent(item.cloudId)}`, { method: "PATCH", body: JSON.stringify({ title: item.title, favorite: item.favorite }) }); }
+async function cloudUpdateFloating(item) { if (!cloudEnabled || !item.cloudId) return; await cloudRequest(`/rest/v1/memories?id=eq.${encodeURIComponent(item.cloudId)}`, { method: "PATCH", body: JSON.stringify({ floating: Boolean(item.floating) }) }); }
 async function cloudDelete(item) { if (!cloudEnabled || !item.cloudId) return; await cloudRequest(`/rest/v1/memories?id=eq.${encodeURIComponent(item.cloudId)}`, { method: "DELETE" }); if (item.storagePath) await cloudRequest(`/storage/v1/object/remove/${CLOUD.bucket}`, { method: "POST", body: JSON.stringify({ prefixes: [item.storagePath] }) }); }
 function showToast(text) { const toast = $("#toast"); toast.textContent = text; toast.classList.add("show"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("show"), 3500); }
 function fileUrl(item) { if (item.publicUrl) return item.publicUrl; if (!item.file) return ""; if (!state.urls.has(item.id)) state.urls.set(item.id, URL.createObjectURL(item.file)); return state.urls.get(item.id); }
@@ -133,7 +124,7 @@ function render() {
 }
 function renderOrbitingPhotos() {
   const orbit = $("#orbit-pictures");
-  const photos = state.items.filter(item => item.type === "photo" && state.orbitPhotoIds.has(orbitPhotoKey(item)));
+  const photos = state.items.filter(item => item.type === "photo" && item.floating);
   const lanes = ["near", "mid", "far"];
   const durations = [34, 42, 50];
   const pageSize = 9;
@@ -186,7 +177,7 @@ function createCard(item) {
   const copy = document.createElement("div"); copy.className = "memory-copy"; copy.innerHTML = "<h3></h3><p></p>"; if (item.type === "audio") copy.querySelector("h3").textContent = item.title; else copy.querySelector("h3").remove(); copy.querySelector("p").textContent = `${item.type === "video" ? "moving moment" : item.type === "audio" ? "music memory" : "photograph"} · ${new Date(item.addedAt).toLocaleDateString(undefined, { month: "long", year: "numeric" })}`;
   const menu = document.createElement("button"); menu.className = "memory-menu"; menu.type = "button"; menu.textContent = "···"; menu.setAttribute("aria-label", item.type === "audio" ? `Options for ${item.title}` : `${item.type === "video" ? "Video" : "Photo"} options`);
   const actions = document.createElement("div"); actions.className = "memory-actions"; actions.hidden = true;
-  [...(item.type === "photo" ? [[state.orbitPhotoIds.has(orbitPhotoKey(item)) ? "Remove from floating pics" : "Add to floating pics", "orbit"]] : []), ...(item.type === "audio" ? [["Rename", "rename"]] : []), [item.favorite ? "Remove favorite" : "Make a favorite", "favorite"], ["Delete", "delete"]].forEach(([label, action]) => { const button = document.createElement("button"); button.type = "button"; button.textContent = label; button.dataset.action = action; actions.appendChild(button); });
+  [...(item.type === "photo" ? [[item.floating ? "Remove from floating pics" : "Add to floating pics", "orbit"]] : []), ...(item.type === "audio" ? [["Rename", "rename"]] : []), [item.favorite ? "Remove favorite" : "Make a favorite", "favorite"], ["Delete", "delete"]].forEach(([label, action]) => { const button = document.createElement("button"); button.type = "button"; button.textContent = label; button.dataset.action = action; actions.appendChild(button); });
   menu.addEventListener("click", event => { event.stopPropagation(); actions.hidden = !actions.hidden; }); actions.addEventListener("click", event => { event.stopPropagation(); manageCard(event, item); }); card.append(thumb, copy, menu, actions); card.addEventListener("click", () => openViewer(item)); return card;
 }
 async function manageCard(event, item) {
@@ -202,11 +193,20 @@ async function manageCard(event, item) {
     $("#memory-title").focus();
   }
   if (action === "orbit") {
-    const key = orbitPhotoKey(item);
-    if (state.orbitPhotoIds.has(key)) state.orbitPhotoIds.delete(key);
-    else state.orbitPhotoIds.add(key);
-    localStorage.setItem(ORBIT_IDS_KEY, JSON.stringify([...state.orbitPhotoIds]));
+    item.floating = !item.floating;
+    await updateItem(item);
     render();
+    if (!cloudEnabled || !item.cloudId) {
+      showToast("Floating photo saved on this device.");
+      return;
+    }
+    try {
+      await cloudUpdateFloating(item);
+      await refresh();
+      showToast("Floating photo saved and shared.");
+    } catch {
+      showToast("Saved here, but cloud sync failed. Check the floating column in your database.");
+    }
   }
   if (action === "favorite") {
     item.favorite = !item.favorite;
@@ -228,10 +228,6 @@ async function manageCard(event, item) {
 }
 async function deleteMemory(item) {
   if (!confirm("Delete this memory?")) return;
-  if (item.type === "photo") {
-    state.orbitPhotoIds.delete(orbitPhotoKey(item));
-    localStorage.setItem(ORBIT_IDS_KEY, JSON.stringify([...state.orbitPhotoIds]));
-  }
   state.items = state.items.filter(candidate => candidate !== item);
   revokeItemUrls(item.id);
   render();
@@ -355,7 +351,7 @@ async function addSelectedFiles(files) {
       showToast(`${file.name} is not a supported photo, video, or audio file.`);
       return null;
     }
-    return { file, thumbnail: null, title: file.name.replace(/\.[^/.]+$/, ""), type, favorite: false, addedAt: Date.now() };
+    return { file, thumbnail: null, title: file.name.replace(/\.[^/.]+$/, ""), type, favorite: false, floating: false, addedAt: Date.now() };
   }).filter(Boolean);
   if (!items.length) return;
 
