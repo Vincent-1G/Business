@@ -4,8 +4,25 @@ const DB_NAME = "little-forever-memories";
 const STORE = "memories";
 const CLOUD = window.MEMORY_CLOUD_CONFIG || {};
 const cloudEnabled = Boolean(CLOUD.url && CLOUD.anonKey && CLOUD.bucket);
+const ORBIT_IDS_KEY = "orbit-photo-ids";
+const ORBIT_MANIFEST_PATH = "floating-pics.json";
 const DELETE_PIN = "1111";
-const state = { items: [], filter: "all", urls: new Map(), thumbUrls: new Map(), pendingFiles: [], editingItem: null, reel: [], reelIndex: 0, orbitTimer: null, pendingDelete: null };
+function loadOrbitPhotoKeys() {
+  try {
+    const keys = JSON.parse(localStorage.getItem(ORBIT_IDS_KEY) || "[]");
+    return new Set(Array.isArray(keys) ? keys.filter(key => typeof key === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+function orbitPhotoKey(item) { return item.cloudId ? `cloud:${item.cloudId}` : `local:${item.id}`; }
+function legacyOrbitPhotoKey(item) { return `${item.title}|${new Date(item.addedAt).getTime()}`; }
+const state = { items: [], filter: "all", urls: new Map(), thumbUrls: new Map(), pendingFiles: [], editingItem: null, reel: [], reelIndex: 0, orbitTimer: null, pendingDelete: null, orbitPhotoKeys: loadOrbitPhotoKeys() };
+let orbitCloudSaveQueue = Promise.resolve();
+function queueOrbitPhotoSave() {
+  orbitCloudSaveQueue = orbitCloudSaveQueue.catch(() => {}).then(() => cloudSaveOrbitPhotoKeys(state.orbitPhotoKeys));
+  return orbitCloudSaveQueue;
+}
 const $ = selector => document.querySelector(selector);
 const grid = $("#memory-grid");
 
@@ -65,7 +82,18 @@ async function cloudSignedUrl(path) { const response = await cloudRequest(`/stor
 async function cloudAdd(item) { const path = `${crypto.randomUUID()}-${item.file.name.replace(/[^a-z0-9._-]/gi, "-")}`; await cloudUpload(item.file, path); const publicUrl = await cloudSignedUrl(path); const remote = await cloudRequest("/rest/v1/memories", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ title: item.title, type: item.type, favorite: false, added_at: item.addedAt, storage_path: path, public_url: publicUrl }) }); return { ...item, cloudId: remote[0].id, publicUrl, storagePath: path }; }
 async function cloudItems() { if (!cloudEnabled) return []; const rows = await cloudRequest("/rest/v1/memories?select=*&order=added_at.desc"); return Promise.all(rows.map(async row => ({ id: `cloud-${row.id}`, cloudId: row.id, title: row.title, type: row.type, favorite: row.favorite, floating: Boolean(row.floating), addedAt: row.added_at, publicUrl: await cloudSignedUrl(row.storage_path).catch(() => row.public_url), storagePath: row.storage_path }))); }
 async function cloudUpdate(item) { if (!cloudEnabled || !item.cloudId) return; await cloudRequest(`/rest/v1/memories?id=eq.${encodeURIComponent(item.cloudId)}`, { method: "PATCH", body: JSON.stringify({ title: item.title, favorite: item.favorite }) }); }
-async function cloudUpdateFloating(item) { if (!cloudEnabled || !item.cloudId) return; await cloudRequest(`/rest/v1/memories?id=eq.${encodeURIComponent(item.cloudId)}`, { method: "PATCH", body: JSON.stringify({ floating: Boolean(item.floating) }) }); }
+async function cloudLoadOrbitPhotoKeys() {
+  const objects = await cloudRequest(`/storage/v1/object/list/${CLOUD.bucket}`, { method: "POST", body: JSON.stringify({ prefix: "", limit: 1000, offset: 0, search: ORBIT_MANIFEST_PATH }) });
+  if (!objects.some(object => object.name === ORBIT_MANIFEST_PATH)) return null;
+  const response = await fetch(await cloudSignedUrl(ORBIT_MANIFEST_PATH));
+  if (!response.ok) throw new Error("Floating photo manifest could not be downloaded.");
+  const manifest = await response.json();
+  return new Set(Array.isArray(manifest.photoKeys) ? manifest.photoKeys.filter(key => typeof key === "string") : []);
+}
+async function cloudSaveOrbitPhotoKeys(keys) {
+  const response = await fetch(`${CLOUD.url.replace(/\/$/, "")}/storage/v1/object/${CLOUD.bucket}/${ORBIT_MANIFEST_PATH}`, { method: "POST", headers: { ...cloudHeaders(), "Content-Type": "application/json", "x-upsert": "true" }, body: JSON.stringify({ photoKeys: [...keys] }) });
+  if (!response.ok) throw new Error(`Floating photo save failed: ${response.status}`);
+}
 async function cloudDelete(item) { if (!cloudEnabled || !item.cloudId) return; await cloudRequest(`/rest/v1/memories?id=eq.${encodeURIComponent(item.cloudId)}`, { method: "DELETE" }); if (item.storagePath) await cloudRequest(`/storage/v1/object/remove/${CLOUD.bucket}`, { method: "POST", body: JSON.stringify({ prefixes: [item.storagePath] }) }); }
 function showToast(text) { const toast = $("#toast"); toast.textContent = text; toast.classList.add("show"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("show"), 3500); }
 function fileUrl(item) { if (item.publicUrl) return item.publicUrl; if (!item.file) return ""; if (!state.urls.has(item.id)) state.urls.set(item.id, URL.createObjectURL(item.file)); return state.urls.get(item.id); }
@@ -124,7 +152,7 @@ function render() {
 }
 function renderOrbitingPhotos() {
   const orbit = $("#orbit-pictures");
-  const photos = state.items.filter(item => item.type === "photo" && item.floating);
+  const photos = state.items.filter(item => item.type === "photo" && state.orbitPhotoKeys.has(orbitPhotoKey(item)));
   const lanes = ["near", "mid", "far"];
   const durations = [34, 42, 50];
   const pageSize = 9;
@@ -193,7 +221,14 @@ async function manageCard(event, item) {
     $("#memory-title").focus();
   }
   if (action === "orbit") {
-    item.floating = !item.floating;
+    if (cloudEnabled && !item.cloudId) {
+      showToast("This photo has not finished syncing yet.");
+      return;
+    }
+    const key = orbitPhotoKey(item);
+    if (state.orbitPhotoKeys.has(key)) state.orbitPhotoKeys.delete(key);
+    else state.orbitPhotoKeys.add(key);
+    localStorage.setItem(ORBIT_IDS_KEY, JSON.stringify([...state.orbitPhotoKeys]));
     await updateItem(item);
     render();
     if (!cloudEnabled || !item.cloudId) {
@@ -201,11 +236,10 @@ async function manageCard(event, item) {
       return;
     }
     try {
-      await cloudUpdateFloating(item);
-      await refresh();
+      await queueOrbitPhotoSave();
       showToast("Floating photo saved and shared.");
     } catch {
-      showToast("Saved here, but cloud sync failed. Check the floating column in your database.");
+      showToast("Saved here, but cloud sync failed. Check your Storage permissions.");
     }
   }
   if (action === "favorite") {
@@ -228,10 +262,15 @@ async function manageCard(event, item) {
 }
 async function deleteMemory(item) {
   if (!confirm("Delete this memory?")) return;
+  if (item.type === "photo") {
+    state.orbitPhotoKeys.delete(orbitPhotoKey(item));
+    localStorage.setItem(ORBIT_IDS_KEY, JSON.stringify([...state.orbitPhotoKeys]));
+  }
   state.items = state.items.filter(candidate => candidate !== item);
   revokeItemUrls(item.id);
   render();
   try {
+    if (cloudEnabled && item.type === "photo") await queueOrbitPhotoSave();
     await removeItem(item.id);
     await cloudDelete(item);
     await refresh();
@@ -385,7 +424,39 @@ async function addSelectedFiles(files) {
   }
 }
 async function savePending() { const title = $("#memory-title").value.trim(); if (!title) return; if (state.editingItem) { state.editingItem.title = title; await updateItem(state.editingItem); try { await cloudUpdate(state.editingItem); } catch { showToast("Renamed here, but the shared copy could not be updated."); } state.editingItem = null; $("#title-dialog").hidden = true; $("#dialog-heading").textContent = "Give it a little title."; await refresh(); return; } const file = state.pendingFiles[0]; if (!file) return; const type = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : "photo"; const submit = $("#dialog-submit"); submit.disabled = true; submit.textContent = type === "video" ? "Preparing memory..." : "Saving memory..."; let thumbnail = null; if (type === "video") { try { thumbnail = await generateThumbnail(file); } catch { showToast("Preview unavailable; saving the original video instead."); } } const optimizedFile = type === "photo" ? await optimizeFileForGallery(file) : file; const item = { file: optimizedFile, thumbnail, title, type, favorite: false, addedAt: Date.now() }; try { if (cloudEnabled) { try { Object.assign(item, await cloudAdd(item)); } catch { showToast("Shared upload failed; keeping this memory on this device."); } } await addItem(item); state.items = [item, ...state.items].sort((a, b) => b.addedAt - a.addedAt); render(); } catch { showToast("This memory could not be saved."); } state.pendingFiles = []; $("#title-dialog").hidden = true; $("#dialog-heading").textContent = "Give it a little title."; submit.disabled = false; submit.textContent = "Save memory ↗"; state.resolveTitle?.(); state.resolveTitle = null; }
-async function refresh() { const localItems = await getAll(); let sharedItems = []; try { sharedItems = await cloudItems(); } catch { if (cloudEnabled) showToast("Shared memories are temporarily unavailable."); } const sharedIds = new Set(sharedItems.map(item => item.cloudId)); const local = localItems.filter(item => !item.cloudId || !sharedIds.has(item.cloudId)); state.items = [...sharedItems, ...local].sort((a, b) => b.addedAt - a.addedAt); render(); }
+async function refresh() {
+  const localItems = await getAll();
+  let sharedItems = [];
+  try {
+    sharedItems = await cloudItems();
+  } catch {
+    if (cloudEnabled) showToast("Shared memories are temporarily unavailable.");
+  }
+  const sharedIds = new Set(sharedItems.map(item => item.cloudId));
+  const local = localItems.filter(item => !item.cloudId || !sharedIds.has(item.cloudId));
+  state.items = [...sharedItems, ...local].sort((a, b) => b.addedAt - a.addedAt);
+
+  if (cloudEnabled) {
+    try {
+      const cloudPhotoKeys = await cloudLoadOrbitPhotoKeys();
+      if (cloudPhotoKeys) {
+        state.orbitPhotoKeys = cloudPhotoKeys;
+      } else {
+        state.items.filter(item => item.type === "photo").forEach(item => {
+          if (item.floating || state.orbitPhotoKeys.has(legacyOrbitPhotoKey(item))) {
+            state.orbitPhotoKeys.add(orbitPhotoKey(item));
+            state.orbitPhotoKeys.delete(legacyOrbitPhotoKey(item));
+          }
+        });
+        if (state.orbitPhotoKeys.size) await cloudSaveOrbitPhotoKeys(state.orbitPhotoKeys);
+      }
+      localStorage.setItem(ORBIT_IDS_KEY, JSON.stringify([...state.orbitPhotoKeys]));
+    } catch {
+      showToast("Floating photo choices could not sync; this device's saved choices are still available.");
+    }
+  }
+  render();
+}
 
 async function submitDeletePin(event) {
   event.preventDefault();

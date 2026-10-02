@@ -3,14 +3,10 @@ create table if not exists public.memories (
   title text not null,
   type text not null check (type in ('photo', 'video', 'audio')),
   favorite boolean not null default false,
-  floating boolean not null default false,
   added_at bigint not null,
   storage_path text not null,
   public_url text not null
 );
-
-alter table public.memories
-  add column if not exists floating boolean not null default false;
 
 alter table public.memories enable row level security;
 
