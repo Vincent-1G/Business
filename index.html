@@ -28,81 +28,6 @@
         height: 100%;
         object-fit: cover;
       }
-      .collage-media {
-        z-index: 1;
-      }
-      .collage-audio {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        display: grid;
-        place-items: center;
-        color: #ffe2f0;
-        font-family: "Playfair Display", serif;
-        font-size: 48px;
-        text-shadow: 0 0 22px rgba(255, 198, 232, 0.7);
-      }
-      .visual-main video {
-        z-index: 1;
-      }
-      .visual-main .visual-placeholder,
-      .visual-top .visual-placeholder,
-      .visual-small .visual-placeholder,
-      .visual-polaroid .visual-placeholder {
-        position: relative;
-        z-index: 2;
-      }
-      .visual-main img:not([hidden]) ~ .visual-placeholder {
-        display: none;
-      }
-      .collage {
-        margin: 84px 8% 54px 4%;
-        border: 1px solid rgba(246, 215, 239, 0.34);
-        box-shadow:
-          inset 0 0 0 10px rgba(246, 215, 239, 0.04),
-          0 0 0 1px rgba(23, 8, 28, 0.4),
-          0 24px 90px rgba(15, 4, 22, 0.3);
-      }
-      .collage::after {
-        position: absolute;
-        inset: 16px;
-        border: 1px solid rgba(246, 215, 239, 0.15);
-        pointer-events: none;
-        content: "";
-      }
-      .collage-card {
-        outline: 1px solid rgba(68, 28, 67, 0.18);
-        outline-offset: 4px;
-      }
-      .collage-frame {
-        position: absolute;
-        z-index: 2;
-        width: 104px;
-        height: 88px;
-        padding: 6px;
-        border: 5px solid #f5e3e8;
-        background: #f5e3e8;
-        box-shadow: 0 12px 24px rgba(15, 4, 22, 0.3);
-      }
-      .collage-frame .visual {
-        width: 100%;
-        height: 100%;
-      }
-      .collage-frame .visual-placeholder {
-        position: relative;
-        z-index: 2;
-        font-size: 14px;
-      }
-      .collage-frame:nth-of-type(5) {
-        top: 4%;
-        left: 33%;
-        transform: rotate(8deg);
-      }
-      .collage-frame:nth-of-type(6) {
-        top: 28%;
-        left: 2%;
-        transform: rotate(-10deg);
-      }
       .collage-frame:nth-of-type(7) {
         top: 59%;
         left: 10%;
@@ -788,6 +713,269 @@
       .love-button-no:hover {
         color: #2a1232;
       }
+      .hero .collage {
+        position: relative;
+        align-self: center;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        height: min(620px, 75vw);
+        min-height: 440px;
+        margin: 0;
+        overflow: hidden;
+        transform: none;
+        border: 0;
+        background:
+          radial-gradient(
+            ellipse at 52% 50%,
+            rgba(20, 79, 104, 0.5),
+            transparent 54%
+          ),
+          linear-gradient(145deg, #101c32, #07111f 68%, #10293b);
+        box-shadow: none;
+      }
+      .hero .collage::after {
+        display: none;
+      }
+      #hero-collage::before {
+        position: absolute;
+        inset: -25%;
+        background-image:
+          radial-gradient(2px 2px at 15% 22%, #d8f4f2 45%, transparent 55%),
+          radial-gradient(1px 1px at 34% 68%, #fff 45%, transparent 55%),
+          radial-gradient(1.5px 1.5px at 74% 27%, #b8e5ee 45%, transparent 55%),
+          radial-gradient(1px 1px at 84% 72%, #fff 45%, transparent 55%),
+          radial-gradient(1px 1px at 56% 12%, #fff 45%, transparent 55%);
+        background-size:
+          240px 220px,
+          190px 190px,
+          280px 260px,
+          230px 240px,
+          170px 180px;
+        content: "";
+        animation: star-drift 48s linear infinite;
+      }
+      @keyframes star-drift {
+        to {
+          transform: translate3d(-3%, 2%, 0);
+        }
+      }
+      @media (max-width: 900px) {
+        .hero .collage {
+          position: relative;
+          right: auto;
+          bottom: auto;
+          width: 100%;
+          height: 480px;
+          min-height: 0;
+          transform: none;
+        }
+      }
+      @media (max-width: 600px) {
+        .hero .collage {
+          height: 390px;
+          margin-top: -20px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #hero-collage::before,
+        .orbit-picture,
+        .orbit-picture-frame {
+          animation: none;
+        }
+      }
+      #hero-collage {
+        --orbit-radius-near: clamp(58px, 9vw, 88px);
+        --orbit-radius-mid: clamp(92px, 14vw, 138px);
+        --orbit-radius-far: clamp(126px, 19vw, 190px);
+      }
+      .orbit-center {
+        position: absolute;
+        z-index: 4;
+        top: 50%;
+        left: 50%;
+        width: clamp(44px, 7vw, 68px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 34% 30%,
+          #fff6d4 0 5%,
+          #f2c779 13%,
+          #db798f 35%,
+          #82527f 58%,
+          rgba(54, 39, 78, 0.2) 74%,
+          transparent 75%
+        );
+        box-shadow:
+          0 0 28px rgba(242, 199, 121, 0.45),
+          0 0 76px rgba(219, 121, 143, 0.3);
+        transform: translate(-50%, -50%);
+      }
+      .orbit-track {
+        position: absolute;
+        z-index: 1;
+        top: 50%;
+        left: 50%;
+        aspect-ratio: 1;
+        border: 1px solid rgba(169, 230, 232, 0.24);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .orbit-track-near {
+        width: calc(var(--orbit-radius-near) + var(--orbit-radius-near));
+      }
+      .orbit-track-mid {
+        width: calc(var(--orbit-radius-mid) + var(--orbit-radius-mid));
+      }
+      .orbit-track-far {
+        width: calc(var(--orbit-radius-far) + var(--orbit-radius-far));
+      }
+      #orbit-pictures {
+        position: absolute;
+        z-index: 3;
+        inset: 0;
+        pointer-events: none;
+      }
+      .orbit-picture {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: clamp(54px, 7vw, 84px);
+        aspect-ratio: 1;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        pointer-events: auto;
+        animation: orbit-circulate var(--orbit-duration) linear infinite;
+        animation-delay: var(--orbit-delay);
+      }
+      .orbit-picture-frame {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        padding: 4px;
+        border: 1px solid rgba(218, 246, 241, 0.82);
+        border-radius: 10px;
+        background: rgba(8, 22, 38, 0.9);
+        box-shadow:
+          0 9px 25px rgba(0, 0, 0, 0.48),
+          0 0 16px rgba(115, 226, 226, 0.3);
+        animation: orbit-counter var(--orbit-duration) linear infinite;
+        animation-delay: var(--orbit-delay);
+      }
+      .orbit-picture img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 6px;
+        object-fit: cover;
+      }
+      .orbit-picture:hover .orbit-picture-frame,
+      .orbit-picture:focus-visible .orbit-picture-frame {
+        border-color: #fff6d4;
+        box-shadow: 0 0 25px rgba(242, 199, 121, 0.72);
+      }
+      @keyframes orbit-circulate {
+        from {
+          transform: rotate(0deg) translateX(var(--orbit-radius));
+        }
+        to {
+          transform: rotate(360deg) translateX(var(--orbit-radius));
+        }
+      }
+      @keyframes orbit-counter {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(-360deg);
+        }
+      }
+      .video-picker-card {
+        max-height: min(80vh, 700px);
+        overflow: auto;
+      }
+      .video-picker-list {
+        display: grid;
+        gap: 9px;
+        max-height: 58vh;
+        margin-top: 18px;
+        overflow-y: auto;
+      }
+      .video-choice {
+        display: grid;
+        grid-template-columns: 78px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 8px;
+        border: 1px solid rgba(238, 184, 232, 0.24);
+        border-radius: 8px;
+        color: #f8e3f5;
+        background: rgba(255, 255, 255, 0.06);
+        text-align: left;
+        cursor: pointer;
+      }
+      .video-choice:hover,
+      .video-choice:focus-visible {
+        border-color: #e9b8e2;
+        background: rgba(226, 169, 225, 0.13);
+      }
+      .video-choice-thumb {
+        display: grid;
+        width: 78px;
+        height: 56px;
+        place-items: center;
+        overflow: hidden;
+        border-radius: 5px;
+        background: #20102b;
+      }
+      .video-choice-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .video-choice-copy {
+        display: grid;
+        gap: 2px;
+      }
+      .video-choice-copy small,
+      .video-choice-action,
+      .video-picker-empty {
+        color: rgba(249, 225, 247, 0.62);
+      }
+      .pin-field {
+        width: 100%;
+        margin-top: 6px;
+        padding: 12px;
+        border: 1px solid rgba(238, 184, 232, 0.3);
+        border-radius: 6px;
+        color: #fff;
+        background: rgba(18, 8, 25, 0.75);
+        font: inherit;
+      }
+      #delete-pin-error {
+        min-height: 1.5em;
+        color: #ffc1d0;
+      }
+      @media (max-width: 600px) {
+        #hero-collage {
+          --orbit-radius-near: 56px;
+          --orbit-radius-mid: 92px;
+          --orbit-radius-far: min(31vw, 116px);
+        }
+        .orbit-picture {
+          width: 52px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .orbit-picture,
+        .orbit-picture-frame {
+          animation: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -865,90 +1053,16 @@
           </div>
         </div>
         <div
-          class="collage"
+          class="collage space-scene"
           id="hero-collage"
-          aria-label="A collage of our memories"
+          role="group"
+          aria-label="Recent photos orbiting a glowing center"
         >
-          <div class="collage-card card-main">
-            <div class="visual visual-main">
-              <img id="hero-cover-image" alt="Our favorite chapter" hidden />
-              <video
-                id="hero-cover-video"
-                muted
-                loop
-                playsinline
-                preload="metadata"
-                hidden
-              ></video>
-              <span class="visual-placeholder" id="hero-cover-placeholder"
-                >our<br />favorite<br />chapter</span
-              >
-            </div>
-            <span class="tape tape-left"></span
-            ><span class="photo-caption"
-              >“The good days are<br />the ones with you.”</span
-            >
-          </div>
-          <div class="collage-card collage-slot card-top">
-            <div class="visual visual-top" id="collage-top"><span>✦</span></div>
-          </div>
-          <div class="collage-card collage-slot card-small">
-            <div class="visual visual-small" id="collage-small">
-              <span>♡</span>
-            </div>
-            <span class="date-stamp">JUNE / 24</span>
-          </div>
-          <div class="collage-card collage-slot card-polaroid">
-            <div class="visual visual-polaroid" id="collage-polaroid">
-              <span>“us, always.”</span>
-            </div>
-            <span class="polaroid-caption">“you + me.”</span>
-          </div>
-          <div class="collage-card collage-slot collage-frame">
-            <div class="visual visual-extra" id="collage-extra-1">
-              <span>photo</span>
-            </div>
-          </div>
-          <div class="collage-card collage-slot collage-frame">
-            <div class="visual visual-extra" id="collage-extra-2">
-              <span>memory</span>
-            </div>
-          </div>
-          <div class="collage-card collage-slot collage-frame">
-            <div class="visual visual-extra" id="collage-extra-3">
-              <span>us</span>
-            </div>
-          </div>
-          <div class="collage-card collage-slot collage-frame">
-            <div class="visual visual-extra" id="collage-extra-4">
-              <span>always</span>
-            </div>
-          </div>
-          <div class="collage-card collage-slot collage-frame">
-            <div class="visual visual-extra" id="collage-extra-5">
-              <span>♡</span>
-            </div>
-          </div>
-          <div class="collage-card collage-slot collage-frame">
-            <div class="visual visual-extra" id="collage-extra-6">
-              <span>moment</span>
-            </div>
-          </div>
-          <div class="collage-card collage-slot collage-frame">
-            <div class="visual visual-extra" id="collage-extra-7">
-              <span>together</span>
-            </div>
-          </div>
-          <div class="collage-card collage-slot collage-frame">
-            <div class="visual visual-extra" id="collage-extra-8">
-              <span>forever</span>
-            </div>
-          </div>
-          <span class="scribble scribble-one">∞</span
-          ><span class="scribble scribble-two">“”</span>
-          <span class="flower flower-a" aria-hidden="true">✿</span>
-          <span class="flower flower-b" aria-hidden="true">✿</span>
-          <span class="flower flower-c" aria-hidden="true">❀</span>
+          <div class="orbit-center" aria-hidden="true"></div>
+          <div class="orbit-track orbit-track-near" aria-hidden="true"></div>
+          <div class="orbit-track orbit-track-mid" aria-hidden="true"></div>
+          <div class="orbit-track orbit-track-far" aria-hidden="true"></div>
+          <div id="orbit-pictures"></div>
         </div>
       </section>
 
@@ -1100,6 +1214,68 @@
             Save memory ↗
           </button>
         </div>
+      </div>
+    </div>
+    <div class="title-dialog" id="video-picker" hidden>
+      <div
+        class="dialog-card video-picker-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="video-picker-heading"
+      >
+        <button
+          class="dialog-close"
+          id="video-picker-close"
+          type="button"
+          aria-label="Close video selection"
+        >
+          ×
+        </button>
+        <p class="kicker">your videos</p>
+        <h2 id="video-picker-heading">Choose a video to play.</h2>
+        <div class="video-picker-list" id="video-picker-list"></div>
+      </div>
+    </div>
+    <div class="title-dialog" id="delete-pin-dialog" hidden>
+      <div
+        class="dialog-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-pin-heading"
+      >
+        <button
+          class="dialog-close"
+          id="delete-pin-close"
+          type="button"
+          aria-label="Cancel deletion"
+        >
+          ×
+        </button>
+        <p class="kicker">confirm deletion</p>
+        <h2 id="delete-pin-heading">Enter your PIN.</h2>
+        <form id="delete-pin-form">
+          <label for="delete-pin-input">PIN</label>
+          <input
+            class="pin-field"
+            id="delete-pin-input"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            autocomplete="off"
+            required
+          />
+          <p id="delete-pin-error" role="alert" aria-live="polite"></p>
+          <div class="dialog-actions">
+            <button class="button button-light" type="submit">Continue</button>
+            <button
+              class="button button-light"
+              id="delete-pin-cancel"
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
     </div>
     <script src="cloud-config.js"></script>
